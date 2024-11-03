@@ -61,5 +61,5 @@ def main():
             print(center_text("Please ensure you provide numbers as arguments.", 50))
             print("=" * 50 + "\n")
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
