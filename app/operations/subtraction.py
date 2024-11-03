@@ -1,9 +1,9 @@
 # app/operations/subtraction.py
 
-from app.calculator import Calculator
+from app.operations import Operation
 from typing import Union
 
-class Subtraction(Calculator):
+class Subtraction(Operation):
     """Class to perform subtraction of two numbers."""
 
     def calculate(self, a: Union[int, float], b: Union[int, float]) -> float:

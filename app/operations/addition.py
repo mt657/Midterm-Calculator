@@ -1,9 +1,9 @@
 # app/operations/addition.py
 
-from app.calculator import Calculator
+from app.operations import Operation
 from typing import Union
 
-class Addition(Calculator):
+class Addition(Operation):
     """Class to perform addition of two numbers."""
 
     def calculate(self, a: Union[int, float], b: Union[int, float]) -> float:
