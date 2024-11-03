@@ -1,9 +1,9 @@
 # app/operations/division.py
 
-from app.calculator import Calculator
+from app.operations import Operation
 from typing import Union
 
-class Division(Calculator):
+class Division(Operation):
     """Class to perform division of two numbers."""
 
     def calculate(self, a: Union[int, float], b: Union[int, float]) -> float:
