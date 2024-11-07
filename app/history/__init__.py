@@ -83,48 +83,51 @@ class History:
         Load the history from the hardcoded 'history.csv' file
         and add each calculation to the Calculator's history.
 
-        Args:
-            calculator (Calculator): The calculator instance to add the history to.
-
         Returns:
-            History: The History instance of the calculator, after loading the history from the file.
+            str: Message indicating the result of the load operation.
         """
         # Check if the history file exists
-        if os.path.exists(self.filename):
-            try:
-                # Load data from CSV
-                df = pd.read_csv(self.filename)
+        if not os.path.exists(self.filename):  # Check if the file doesn't exist
+            return f"Error: {self.filename} not found."
 
-                # Clear the current history in the History instance
-                self._history.clear()  # Clear any existing history before loading new data
+        try:
+            # Load data from CSV
+            df = pd.read_csv(self.filename)
 
-                # Loop through each row of the CSV file and add it to the history
-                for _, row in df.iterrows():
-                    operand1 = float(row["operand1"])
-                    operation_name = row["operation"]
-                    operand2 = float(row["operand2"])
-                    result = float(row["result"])
+            # Check if the file is empty
+            if df.empty:
+                return f"Error: {self.filename} is empty or corrupted."
 
-                    # Use the operation_map to get the correct operation object based on the operation name
-                    operation = operation_map.get(operation_name, None)
+            # Clear the current history in the History instance
+            self._history.clear()  # Clear any existing history before loading new data
 
-                    if operation:
-                        # Create the Calculation object with the operation and operands
-                        calculation = Calculation(operation, operand1, operand2)
-                        calculation.set_result(result)
+            # Loop through each row of the CSV file and add it to the history
+            for _, row in df.iterrows():
+                operand1 = float(row["operand1"])
+                operation_name = row["operation"]
+                operand2 = float(row["operand2"])
+                result = float(row["result"])
 
-                        self.add_calculation(calculation)  # Adding each calculation to calculator history
-                    else:
-                        print(f"Error: Operation {operation_name} not recognized.")  # Handle unknown operations
+                # Use the operation_map to get the correct operation object based on the operation name
+                operation = operation_map.get(operation_name, None)
 
-            except pd.errors.EmptyDataError:
-                # Print the error message if the file is empty or corrupted
-                print(f"Error: {self.filename} is empty or corrupted.")
-        else:
-            # Print the error message if the file doesn't exist
-            print(f"Error: {self.filename} not found.")
+                if operation:
+                    # Create the Calculation object with the operation and operands
+                    calculation = Calculation(operation, operand1, operand2)
+                    calculation.set_result(result)
 
-        # Return the calculator's history after updating it with the loaded calculations
+                    self.add_calculation(calculation)  # Adding each calculation to calculator history
+                else:
+                    print(f"Error: Operation {operation_name} not recognized.")  # Handle unknown operations
+
+        except pd.errors.EmptyDataError:
+            # If the file is empty or corrupted
+            return f"Error: {self.filename} is empty or corrupted."
+        except Exception as e:
+            # If any other exception occurs
+            return f"Error: {str(e)}"
+
+        # Return the success message after loading history
         return f"History loaded from {self.filename}."
 
     def get_history(self) -> List[Calculation]:
