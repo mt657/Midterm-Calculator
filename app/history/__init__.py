@@ -1,6 +1,19 @@
-import json
+import pandas as pd
+import os
 from typing import List
 from app.calculation import Calculation
+from app.operations.addition import Addition
+from app.operations.subtraction import Subtraction
+from app.operations.multiplication import Multiplication
+from app.operations.division import Division
+
+# Global operation map to map operation names to the corresponding operation objects
+operation_map = {
+    "Addition": Addition(),
+    "Subtraction": Subtraction(),
+    "Multiplication": Multiplication(),
+    "Division": Division()
+}
 
 class History:
     """Class to keep track of calculation history with undo, clear, save, and load functionality."""
@@ -8,6 +21,7 @@ class History:
     def __init__(self):
         """Initialize an empty list to store calculation history."""
         self._history: List[Calculation] = []
+        self.filename = "history.csv"  # Hardcode the filename
 
     def add_calculation(self, calculation: Calculation):
         """
@@ -41,38 +55,77 @@ class History:
         self._history.clear()
         return "History cleared."
 
-    def save(self, filename: str = "history.json") -> str:
+    def save(self) -> str:
         """
-        Save the history to a JSON file.
+        Save the history to a CSV file.
 
         Args:
-            filename (str): The name of the file to save the history to. Defaults to 'history.json'.
+            filename (str): The name of the file to save the history to. Defaults to 'history.csv'.
 
         Returns:
             str: Confirmation message that history has been saved.
         """
-        with open(filename, "w") as file:
-            json.dump([calc.__dict__ for calc in self._history], file)
-        return f"History saved to {filename}."
+        # Convert the list of Calculation objects to a DataFrame
+        history_data = [{
+            "operand1": calc.operand1,
+            "operation": calc.operation.__class__.__name__,  # Save only the operation class name as a string
+            "operand2": calc.operand2,
+            "result": calc.result
+        } for calc in self._history]
 
-    def load(self, filename: str = "history.json") -> str:
+        # Create DataFrame and save to CSV
+        df = pd.DataFrame(history_data)
+        df.to_csv(self.filename, index=False)  # Save to the hardcoded filename
+        return f"History saved to {self.filename}."
+
+    def load(self) -> str:
         """
-        Load the history from a JSON file.
+        Load the history from the hardcoded 'history.csv' file
+        and add each calculation to the Calculator's history.
 
         Args:
-            filename (str): The name of the file to load the history from. Defaults to 'history.json'.
+            calculator (Calculator): The calculator instance to add the history to.
 
         Returns:
-            str: Confirmation message that history has been loaded or error message if file not found.
+            History: The History instance of the calculator, after loading the history from the file.
         """
-        try:
-            with open(filename, "r") as file:
-                self._history = [Calculation(**entry) for entry in json.load(file)]
-            return f"History loaded from {filename}."
-        except FileNotFoundError:
-            return f"Error: {filename} not found."
-        except json.JSONDecodeError:
-            return f"Error: Failed to decode history data from {filename}."
+        # Check if the history file exists
+        if os.path.exists(self.filename):
+            try:
+                # Load data from CSV
+                df = pd.read_csv(self.filename)
+
+                # Clear the current history in the History instance
+                self._history.clear()  # Clear any existing history before loading new data
+
+                # Loop through each row of the CSV file and add it to the history
+                for _, row in df.iterrows():
+                    operand1 = float(row["operand1"])
+                    operation_name = row["operation"]
+                    operand2 = float(row["operand2"])
+                    result = float(row["result"])
+
+                    # Use the operation_map to get the correct operation object based on the operation name
+                    operation = operation_map.get(operation_name, None)
+
+                    if operation:
+                        # Create the Calculation object with the operation and operands
+                        calculation = Calculation(operation, operand1, operand2)
+                        calculation.set_result(result)
+
+                        self.add_calculation(calculation)  # Adding each calculation to calculator history
+                    else:
+                        print(f"Error: Operation {operation_name} not recognized.")  # Handle unknown operations
+
+            except pd.errors.EmptyDataError:
+                # Print the error message if the file is empty or corrupted
+                print(f"Error: {self.filename} is empty or corrupted.")
+        else:
+            # Print the error message if the file doesn't exist
+            print(f"Error: {self.filename} not found.")
+
+        # Return the calculator's history after updating it with the loaded calculations
+        return f"History loaded from {self.filename}."
 
     def get_history(self) -> List[Calculation]:
         """

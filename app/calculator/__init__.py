@@ -10,23 +10,20 @@ class Calculator:
 
     def __init__(self):
         """Initialize the Calculator with command mappings and history."""
-        self.history = History()
+        self.history = History()  # Initialize history attribute here
         self.commands = {
-            # Operation commands
             'add': Addition(),
             'subtract': Subtraction(),
             'multiply': Multiplication(),
             'divide': Division(),
-            #General commands
             'help': self.show_help,
             'exit': self.exit_calculator,
             'quit': self.exit_calculator,
-            # History commands
             'undo': self.history.undo,
             'clear': self.history.clear,
-            'save': lambda: self.history.save(),
-            'load': lambda: self.history.load(),
-            'history': self.read_history  # New command to read history
+            'save': self.history.save,
+            'load': self.history.load,  # Ensure load command maps to load_history
+            'history': self.history.get_history
         }
 
     def execute_command(self, command, *args):
@@ -57,15 +54,6 @@ class Calculator:
                 return f"Error: {str(e)}"
         else:
             return "Error: Unknown command."
-
-
-    def read_history(self):
-        """Retrieve and display the calculation history.
-
-        Returns:
-            str: A formatted string of the history of calculations.
-        """
-        return self.history.get_history()  # Assume `get_history` returns the formatted history
 
     def show_help(self):
         """Display available commands in a readable format.
