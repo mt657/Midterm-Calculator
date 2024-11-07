@@ -43,17 +43,22 @@ def main():
             args = list(map(float, parts[1:]))  # Convert arguments to float
             output = calculator.execute_command(command, *args)
 
-            # Handle error messages here
-            if isinstance(output, str) and "Error:" in output:
-                print("\n" + "=" * 50)
-                print(center_text(output, 50))  # Center the error message
-                print("=" * 50 + "\n")
-            elif output is not None:
+            # Determine if output is a numeric result, string message, or list (e.g., history)
+            if isinstance(output, (int, float)):  # For numeric results
                 print("\n" + "=" * 50)
                 print()  # Add spacing above the result
                 print(center_text(f"Result: {output}", 50))
                 print()  # Add spacing below the result
                 print("=" * 50 + "\n")  # Bottom border
+            elif isinstance(output, list):  # For list results (e.g., history)
+                print("\n" + "=" * 50)
+                for line in output:
+                    print(center_text(str(line), 50))  # Print each history item centered
+                print("=" * 50 + "\n")
+            else:  # For error/help messages as strings
+                print("\n" + "=" * 50)
+                print(center_text(output, 50))  # Center the error or message text
+                print("=" * 50 + "\n")
 
         except ValueError:
             print("\n" + "=" * 50)
