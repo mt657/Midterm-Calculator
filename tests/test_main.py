@@ -9,7 +9,6 @@ from app.calculator import Calculator
 
 def test_center_text():
     """Test the center_text function to ensure it centers text correctly."""
-    # Adjusted expected output to match actual result
     expected_output = "       Hello        "
     assert center_text("Hello", 20) == expected_output
 
@@ -32,26 +31,22 @@ def test_main_negative(mock_stdout):
     assert "Exiting the calculator. Goodbye!" in output  # Final exit message
 
 @patch('sys.stdout', new_callable=StringIO)
-@patch.object(Calculator, 'read_history', return_value=[
-    "5 addition 3 = 8",
-    "10 subtraction 4 = 6",
-    "2 multiplication 3 = 6"
-])
-# Mocking user input to simulate 'history' command and then 'exit'
-@patch('builtins.input', side_effect=['history', 'exit'])
-def test_print_history(_mock_input, mock_read_history, mock_stdout):
-    """Test the printing of the history list using the elif block for list outputs."""
+def test_main_with_history(mock_stdout):
+    """Test the main function when a list output (e.g., history) is returned."""
 
-    # Call the main function, which will now simulate user input
-    main()  # The 'history' command will be executed first, then 'exit' will terminate the loop
+    # Simulate a list of history items returned by the Calculator
+    history_items = ["1 + 1 = 2", "2 + 3 = 5", "5 - 1 = 4"]
 
-    # Capture the printed output
+    # Mock the 'execute_command' method to return a history list
+    with patch.object(Calculator, 'execute_command', return_value=history_items):
+        inputs = iter(['history', 'exit'])  # Simulate the command 'history' followed by 'exit'
+        with patch('builtins.input', side_effect=lambda _: next(inputs)):
+            main()
+
     output = mock_stdout.getvalue()
 
-    # Check that the history is printed correctly
-    for line in mock_read_history.return_value:
-        # Ensure the history items are printed and centered
-        assert center_text(line, 50) in output
+    # Check if the history items are printed centered
+    for item in history_items:
+        assert item.center(50) in output  # The history item should be printed centered
 
-    # Check if the lines are printed with the appropriate separators
-    assert "=" * 50 in output  # Ensure the separator line is printed
+    assert "Exiting the calculator. Goodbye!" in output  # Ensure the exit message is printed

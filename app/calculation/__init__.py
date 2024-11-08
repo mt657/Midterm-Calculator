@@ -28,6 +28,10 @@ class Calculation:
         self.result = self.operation.calculate(self.operand1, self.operand2)  # Perform the calculation using the operation
         return self.result
 
+    def set_result(self, result):
+            """Setter for the result attribute."""
+            self.result = result
+
     def __repr__(self) -> str:
         """
         Provide a string representation of the calculation, showing operands, operation, and result.
