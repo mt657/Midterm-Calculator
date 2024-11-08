@@ -1,9 +1,14 @@
+import logging
+from app.logger_config import setup_logging
 from app.operations.addition import Addition
 from app.operations.subtraction import Subtraction
 from app.operations.multiplication import Multiplication
 from app.operations.division import Division
 from app.history import History
 from app.calculation import Calculation
+
+# Set up logging configuration
+setup_logging()
 
 class Calculator:
     """A simple calculator class to perform basic arithmetic operations with history tracking."""
@@ -22,9 +27,10 @@ class Calculator:
             'undo': self.history.undo,
             'clear': self.history.clear,
             'save': self.history.save,
-            'load': self.history.load,  # Ensure load command maps to load_history
+            'load': self.history.load,
             'history': self.history.get_history
         }
+        logging.info("Calculator initialized with available commands and history tracking.")
 
     def execute_command(self, command, *args):
         """Execute the command associated with the user input.
@@ -38,21 +44,28 @@ class Calculator:
         """
         if command in self.commands:
             try:
+                logging.info(f"Executing command: {command} with arguments: {args}")
+                
                 if command in ['exit', 'quit', 'undo', 'clear', 'help', 'save', 'load', 'history']:
-                    return self.commands[command]()  # Directly return result for non-math commands
+                    result = self.commands[command]()
+                    return result
 
                 # Create a Calculation instance, perform the operation, and add to history
                 operation = self.commands[command]
                 calculation = Calculation(operation, *args)
                 result = calculation.execute()
-                self.history.add_calculation(calculation)  # Log calculation to history
-                return result  # Return only the numeric result
+                self.history.add_calculation(calculation)
+                logging.info(f"Calculation executed: {calculation}, Result: {result}")
+                return result
 
             except TypeError:
+                logging.error("Invalid number of arguments provided for command.")
                 return "Error: Invalid number of arguments. Please provide two numbers."
             except Exception as e:
+                logging.error(f"An error occurred: {str(e)}")
                 return f"Error: {str(e)}"
         else:
+            logging.warning(f"Unknown command attempted: {command}")
             return "Error: Unknown command."
 
     def show_help(self):
@@ -61,6 +74,7 @@ class Calculator:
         Returns:
             str: A formatted string of available commands for the user.
         """
+        logging.info("Displaying help information.")
         help_text = (
             "Available commands:\n"
             "\n"
@@ -91,4 +105,5 @@ class Calculator:
         Returns:
             str: A farewell message indicating the calculator is closing.
         """
+        logging.info("Exiting the calculator.")
         return "Exiting the calculator. Goodbye!"
