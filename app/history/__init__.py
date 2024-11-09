@@ -102,27 +102,35 @@ class History:
         try:
             df = pd.read_csv(self.filename)
 
+            # Check if the file is empty
             if df.empty:
                 logger.error(f"{self.filename} is empty or corrupted.")
                 return f"Error: {self.filename} is empty or corrupted."
 
+            # Clear existing history before loading the new one
             self._history.clear()
 
             for _, row in df.iterrows():
-                operand1 = float(row["operand1"])
-                operation_name = row["operation"]
-                operand2 = float(row["operand2"])
-                result = float(row["result"])
+                try:
+                    operand1 = float(row["operand1"])
+                    operation_name = row["operation"]
+                    operand2 = float(row["operand2"])
+                    result = float(row["result"])
 
-                operation = operation_map.get(operation_name, None)
+                    operation = operation_map.get(operation_name, None)
 
-                if operation:
-                    calculation = Calculation(operation, operand1, operand2)
-                    calculation.set_result(result)
-                    self.add_calculation(calculation)
-                    logger.info(f"Loaded calculation: {calculation}")
-                else:
-                    logger.error(f"Operation {operation_name} not recognized during load.")
+                    if operation:
+                        calculation = Calculation(operation, operand1, operand2)
+                        calculation.set_result(result)
+                        self.add_calculation(calculation)
+                        logger.info(f"Loaded calculation: {calculation}")
+                    else:
+                        logger.error(f"Operation {operation_name} not recognized during load.")
+                        return f"Error: Operation {operation_name} not recognized."
+
+                except ValueError as e:
+                    logger.error(f"Error processing row: {e}")
+                    return f"Error: Invalid data in {self.filename}."
 
         except pd.errors.EmptyDataError:
             logger.error(f"{self.filename} is empty or corrupted.")
