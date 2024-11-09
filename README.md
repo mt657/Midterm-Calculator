@@ -25,7 +25,7 @@ In this project, several design patterns are implemented to ensure a scalable an
 
 3. **Observer Pattern**: Used to maintain the history of calculations and notify observers (e.g., `HistoryObserver`) whenever a new calculation is performed. This pattern allows the history to be updated without tightly coupling the `Calculator` class to the history functionality.
 
-   **Link to implementation**: [History Observer](app/history/history.py)
+   **Link to implementation**: [History Observer](app/history/__init__.py)
 
 ---
 
