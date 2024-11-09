@@ -80,7 +80,7 @@ def setup_logging():
     logger.setLevel(logging.INFO)
 ```
 
-**Link to implementation**: [Logging Configuration](app/logger_config.py)
+**Link to implementation**: [Logging Configuration](app/logger_config/__init__.py)
 
 ---
 
