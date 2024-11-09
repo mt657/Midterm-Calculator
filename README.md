@@ -17,7 +17,7 @@ In this project, several design patterns are implemented to ensure a scalable an
 
 1. **Singleton Pattern**: Ensures that only one instance of the calculator exists. This is implemented in the `SingletonCalculator` class, which ensures that each calculator command uses the same instance throughout the application's lifecycle.
 
-   **Link to implementation**: [SingletonCalculator Class](app/calculator/calculator_singleton.py)
+   **Link to implementation**: [SingletonCalculator Class](app/calculator/__init__.py)
 
 2. **Strategy Pattern**: Used for the different mathematical operations (e.g., addition, subtraction, multiplication, division). Each operation is encapsulated in its own class, and the `Calculator` class delegates the operation selection to these strategy classes.
 
