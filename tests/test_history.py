@@ -9,13 +9,13 @@ Fixtures:
     history: Provides a fresh instance of the History class for each test.
 """
 # pylint: disable=redefined-outer-name
+import os
 from unittest.mock import patch, MagicMock
 import pytest
 import pandas as pd
 from app.history import History
 from app.calculation import Calculation
 from app.operations.addition import Addition
-import os
 
 # Sample data for testing purposes
 sample_calculation = Calculation(Addition(), 5, 3)
@@ -133,14 +133,15 @@ def test_load_unknown_operation(history_fixture):
     with patch("pandas.read_csv", return_value=MagicMock(empty=False,
         iterrows=MagicMock(return_value=[(0, {"operand1": 5,
             "operation": "UnknownOperation", "operand2": 3, "result": 8})]))):
-        
+
         # Catch the log output
         with patch('app.history.logger') as mock_logger:
             load_msg = history_fixture.load()
 
             # Check that the log call for unknown operation is made
-            mock_logger.error.assert_called_with("Operation UnknownOperation not recognized during load.")
-            
+            expected_error_message = "Operation UnknownOperation not recognized during load."
+            mock_logger.error.assert_called_with(expected_error_message)
+
             # Check that the load method returns the error message for an unknown operation
             assert load_msg == "Error: Operation UnknownOperation not recognized."
 
@@ -153,7 +154,7 @@ def test_undo_no_history(history_fixture):
 
 # Test case to ensure the correct handling of ValueError during history loading
 def test_load_history_invalid_data():
-    # Prepare mock data for an invalid CSV (non-numeric values)
+    """Prepare mock data for an invalid CSV (non-numeric values)"""
     invalid_data = {
         "operand1": ["a", "b", "c"],  # Non-numeric values
         "operation": ["Addition", "Subtraction", "Multiplication"],
@@ -162,19 +163,20 @@ def test_load_history_invalid_data():
     }
     # Convert the mock data into a DataFrame
     df_invalid = pd.DataFrame(invalid_data)
-    
+
     # Mock pandas.read_csv to return the invalid DataFrame
     with patch('pandas.read_csv', return_value=df_invalid):
         # Create a History instance
         history = History()
-        
+
         # Capture the output from the load method
         result = history.load()
 
         # Check if the appropriate error message is returned
         assert result == "Error: Invalid data in history.csv."
-        
+
         # Additionally, we can check that logging occurred
         with patch('app.history.logger.error') as mock_error:
             history.load()
-            mock_error.assert_called_with("Error processing row: could not convert string to float: 'a'")
+            expected_error_message = "Error processing row: could not convert string to float: 'a'"
+            mock_error.assert_called_with(expected_error_message)
