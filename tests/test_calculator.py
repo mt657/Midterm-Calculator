@@ -1,83 +1,53 @@
-"""Unit tests for the Calculator class."""
 # pylint: disable=redefined-outer-name
 import pytest
-from app.calculator import Calculator
+from app.operation_manager import OperationManager  # Import the OperationManager class
+
 
 @pytest.fixture
-def calculator():
-    """Fixture to create a Calculator instance for testing."""
-    return Calculator()
+def operation_manager():
+    """Fixture to create an OperationManager instance for testing."""
+    return OperationManager()
 
-@pytest.mark.parametrize("command, args, expected_output", [
-    ("add", (1, 2), 3),                          # Positive test
-    ("subtract", (5, 3), 2),                     # Positive test
-    ("multiply", (2, 4), 8),                     # Positive test
-    ("divide", (8, 2), 4),                       # Positive test
-    ("divide", (1, 0), "Error: Cannot divide by zero"),  # Negative test
-    ("unknown", (1, 2), "Error: Unknown command.")  # Negative test
+
+@pytest.mark.parametrize("operation_name, expected_class", [
+    ("add", "Addition"),                          # Positive test: Check if 'add' operation is loaded correctly
+    ("subtract", "Subtraction"),                  # Positive test: Check if 'subtract' operation is loaded correctly
+    ("multiply", "Multiplication"),               # Positive test: Check if 'multiply' operation is loaded correctly
+    ("divide", "Division"),                       # Positive test: Check if 'divide' operation is loaded correctly
+    ("power", "Power"),                           # Positive test: Check if 'power' operation is loaded correctly
+    ("modulus", "Modulus"),                       # Positive test: Check if 'modulus' operation is loaded correctly
 ])
-def test_execute_command(calculator, command, args, expected_output):
-    """Test the execute_command method for various commands."""
-    result = calculator.execute_command(command, *args)
+def test_get_operation(operation_manager, operation_name, expected_class):
+    """Test that the get_operation method correctly retrieves the operation class."""
+    operation_class = operation_manager.get_operation(operation_name)
+    
+    # Handle case where operation_class is None (operation not found)
+    if operation_class is None:
+        pytest.fail(f"Operation class for '{operation_name}' not found.")
+    
+    # Check if the retrieved operation class name matches the expected class name
+    assert operation_class.__name__ == expected_class
 
-    # Check if the output matches the expected result or error message
+
+@pytest.mark.parametrize("operation_name, expected_list", [
+    ("add", ["add", "subtract", "multiply", "divide", "power", "modulus"]),  # Positive test: Check if 'add' is in the list of operations
+    ("subtract", ["add", "subtract", "multiply", "divide", "power", "modulus"]),  # Positive test: Check if 'subtract' is in the list
+])
+def test_list_operations(operation_manager, operation_name, expected_list):
+    """Test the list_operations method to check if operations are listed correctly."""
+    available_operations = operation_manager.list_operations()
+    
+    # Check if the list of operations contains the expected operation
+    assert operation_name in available_operations
+    assert sorted(available_operations) == sorted(expected_list)
+
+
+@pytest.mark.parametrize("operation_name, expected_output", [
+    ("unknown", None),  # Negative test: Check for a non-existent operation
+])
+def test_get_invalid_operation(operation_manager, operation_name, expected_output):
+    """Test the get_operation method when trying to retrieve an invalid operation."""
+    result = operation_manager.get_operation(operation_name)
+    
+    # Assert that the result is None (since the operation is unknown)
     assert result == expected_output
-
-def test_show_help(calculator):
-    """Test the show_help method to ensure it returns the correct help text."""
-    expected_help_text = (
-        "Available commands:\n"
-        "\n"
-        "Operation Commands:\n"
-        "- add: Add two numbers\n"
-        "- subtract: Subtract the second number from the first\n"
-        "- multiply: Multiply two numbers\n"
-        "- divide: Divide the first number by the second\n"
-        "\n"
-        "History Commands:\n"
-        "- undo: Undo the last calculation\n"
-        "- clear: Clear the calculation history\n"
-        "- history: Read the calculation history\n"
-        "\n"
-        "File Commands:\n"
-        "- save: Save the current history to a file\n"
-        "- load: Load history from a file\n"
-        "\n"
-        "General Commands:\n"
-        "- help: Display this help message\n"
-        "- exit/quit: Exit the calculator"
-    )
-    assert calculator.show_help() == expected_help_text
-
-def test_exit_calculator(calculator):
-    """Test the exit_calculator method to ensure it returns the correct exit message."""
-    assert calculator.exit_calculator() == "Exiting the calculator. Goodbye!"
-
-def test_exit_command(calculator):
-    """Test the exit command to ensure it calls the exit_calculator method."""
-    result = calculator.execute_command('exit')
-    assert result == "Exiting the calculator. Goodbye!"
-
-def test_invalid_argument_count(calculator):
-    """Test handling of invalid argument count."""
-    result = calculator.execute_command('add', 1)  # Only one argument
-    assert result == "Error: Invalid number of arguments. Please provide two numbers."
-
-    result = calculator.execute_command('add')  # No arguments
-    assert result == "Error: Invalid number of arguments. Please provide two numbers."
-
-# def test_read_history(calculator):
-#     """Test read_history to ensure it retrieves and displays history correctly."""
-
-#     # Perform some operations
-#     calculator.execute_command('add', 5, 3)         # 5 + 3 = 8
-#     calculator.execute_command('subtract', 10, 4)    # 10 - 4 = 6
-#     calculator.execute_command('multiply', 2, 3)     # 2 * 3 = 6
-
-#     # Retrieve the history using the 'history' command
-#     history_output = calculator.execute_command('history')
-
-#     # Check that each calculation string is in the history output
-#     assert "5 addition 3 = 8" in str(history_output[0])
-#     assert "10 subtraction 4 = 6" in str(history_output[1])
-#     assert "2 multiplication 3 = 6" in str(history_output[2])

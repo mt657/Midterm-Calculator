@@ -1,52 +1,94 @@
-# tests/test_main.py
+from unittest.mock import MagicMock, patch
+import pytest
+from main import main, center_text  # Import from root directory
 
-"""Tests for the main module and its functions."""
+# Mocking OperationManager and any related functionality
+@pytest.fixture(autouse=True)
+def mock_operation_manager(monkeypatch):
+    # Patch the OperationManager import to prevent actual operation management during tests
+    mock_manager = MagicMock()
+    monkeypatch.setattr("app.calculator.OperationManager", mock_manager)
+    monkeypatch.setattr("app.calculator.load_operations", MagicMock(return_value={}))  # Mock load_operations too
 
-from io import StringIO
-from unittest.mock import patch
-from main import main, center_text
-from app.calculator import Calculator
 
-def test_center_text():
-    """Test the center_text function to ensure it centers text correctly."""
-    expected_output = "       Hello        "
-    assert center_text("Hello", 20) == expected_output
+@pytest.mark.parametrize(
+    "command, args, expected_output",
+    [
+        ("add", ['3', '4'], "Result: 7.0"),
+        ("subtract", ['10', '4'], "Result: 6.0"),
+        ("multiply", ['3', '5'], "Result: 15.0"),
+        ("divide", ['10', '2'], "Result: 5.0"),
+        ("divide", ['10', '0'], "Error: Cannot divide by zero"),
+    ]
+)
+def test_main_operations(mock_input, capsys, command, args, expected_output):
+    """Test the main loop for various operations (add, subtract, multiply, divide)."""
+    mock_input([command] + args)  # Mock user input for command and arguments
 
-@patch('sys.stdout', new_callable=StringIO)
-def test_main_negative(mock_stdout):
-    """Test the main function for negative cases, handling various command inputs."""
-    # Define a sequence of inputs to simulate user interactions
-    inputs = iter(['add 1 2', 'divide 1 0', 'unknown command', 'exit'])
+    # Run the main function (simulates the interactive loop)
+    main()
 
-    # Use side_effect with a lambda that takes an argument to match input's call signature
-    with patch('builtins.input', side_effect=lambda _: next(inputs)):
+    # Capture the printed output
+    captured = capsys.readouterr()
+
+    # Check if the expected output is in the captured stdout
+    assert expected_output in captured.out
+
+
+@pytest.mark.parametrize(
+    "command, expected_output",
+    [
+        ("exit", "Exiting the calculator. Goodbye!"),
+        ("quit", "Exiting the calculator. Goodbye!"),
+        ("help", "Available commands:")
+    ]
+)
+def test_main_commands(mock_input, capsys, command, expected_output):
+    """Test the main loop for special commands (exit, quit, help)."""
+    mock_input([command])
+
+    # Run the main function (simulates the interactive loop)
+    with pytest.raises(SystemExit):  # Expect the main function to exit for exit/quit
         main()
 
-    output = mock_stdout.getvalue()
+    # Capture the printed output
+    captured = capsys.readouterr()
 
-    # Checking for expected outputs in sequence
-    assert "Result: 3.0" in output  # Expected result of 'add 1 2'
-    assert "Error: Cannot divide by zero" in output  # Expected error for division by zero
-    assert "Error: Invalid input." in output  # Expected error for unknown command
-    assert "Exiting the calculator. Goodbye!" in output  # Final exit message
+    # Check if the expected output is in the captured stdout
+    assert expected_output in captured.out
 
-@patch('sys.stdout', new_callable=StringIO)
-def test_main_with_history(mock_stdout):
-    """Test the main function when a list output (e.g., history) is returned."""
 
-    # Simulate a list of history items returned by the Calculator
-    history_items = ["1 + 1 = 2", "2 + 3 = 5", "5 - 1 = 4"]
+@pytest.mark.parametrize(
+    "user_input, expected_error_message",
+    [
+        (['add', 'a', 'b'], "Error: Invalid input."),
+        (['subtract', '10'], "Error: Invalid input."),
+        (['multiply', 'x', 'y'], "Error: Invalid input."),
+    ]
+)
+def test_main_invalid_input(mock_input, capsys, user_input, expected_error_message):
+    """Test the main loop for invalid inputs."""
+    mock_input(user_input)
 
-    # Mock the 'execute_command' method to return a history list
-    with patch.object(Calculator, 'execute_command', return_value=history_items):
-        inputs = iter(['history', 'exit'])  # Simulate the command 'history' followed by 'exit'
-        with patch('builtins.input', side_effect=lambda _: next(inputs)):
-            main()
+    # Run the main function (simulates the interactive loop)
+    main()
 
-    output = mock_stdout.getvalue()
+    # Capture the printed output
+    captured = capsys.readouterr()
 
-    # Check if the history items are printed centered
-    for item in history_items:
-        assert item.center(50) in output  # The history item should be printed centered
+    # Check if the expected error message is printed
+    assert expected_error_message in captured.out
 
-    assert "Exiting the calculator. Goodbye!" in output  # Ensure the exit message is printed
+
+@pytest.mark.parametrize(
+    "text, width, expected_centered_text",
+    [
+        ("Hello", 20, "       Hello        "),
+        ("Python", 30, "            Python            "),
+        ("Test", 10, "    Test    "),
+    ]
+)
+def test_center_text(text, width, expected_centered_text):
+    """Test the center_text function for various inputs."""
+    centered_text = center_text(text, width)
+    assert centered_text == expected_centered_text
