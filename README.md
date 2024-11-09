@@ -120,7 +120,7 @@ A short video demonstration of the calculator, highlighting key features and fun
 - Use commands like `history`, `clear`, and `exit`.
 - Handle errors and input validation.
 
-**Link to video demonstration**: [Video Demonstration of Calculator](<insert_video_link_here>)
+**Link to video demonstration**: [Video Demonstration of Calculator](https://youtu.be/UiEFt0iwJzk)
 
 ---
 
