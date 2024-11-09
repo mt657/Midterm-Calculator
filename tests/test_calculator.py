@@ -14,6 +14,8 @@ def calculator():
     ("multiply", (2, 4), 8),                     # Positive test
     ("divide", (8, 2), 4),                       # Positive test
     ("divide", (1, 0), "Error: Cannot divide by zero"),  # Negative test
+    ("power", (2, 3), 8),                        # Positive test for power
+    ("modulus", (10, 3), 1),                     # Positive test for modulus
     ("unknown", (1, 2), "Error: Unknown command.")  # Negative test
 ])
 def test_execute_command(calculator, command, args, expected_output):
@@ -33,6 +35,8 @@ def test_show_help(calculator):
         "- subtract: Subtract the second number from the first\n"
         "- multiply: Multiply two numbers\n"
         "- divide: Divide the first number by the second\n"
+        "- power: Raise the first number to the power of the second\n"
+        "- modulus: Find the remainder when the first number is divided by the second\n"
         "\n"
         "History Commands:\n"
         "- undo: Undo the last calculation\n"
@@ -65,19 +69,3 @@ def test_invalid_argument_count(calculator):
 
     result = calculator.execute_command('add')  # No arguments
     assert result == "Error: Invalid number of arguments. Please provide two numbers."
-
-# def test_read_history(calculator):
-#     """Test read_history to ensure it retrieves and displays history correctly."""
-
-#     # Perform some operations
-#     calculator.execute_command('add', 5, 3)         # 5 + 3 = 8
-#     calculator.execute_command('subtract', 10, 4)    # 10 - 4 = 6
-#     calculator.execute_command('multiply', 2, 3)     # 2 * 3 = 6
-
-#     # Retrieve the history using the 'history' command
-#     history_output = calculator.execute_command('history')
-
-#     # Check that each calculation string is in the history output
-#     assert "5 addition 3 = 8" in str(history_output[0])
-#     assert "10 subtraction 4 = 6" in str(history_output[1])
-#     assert "2 multiplication 3 = 6" in str(history_output[2])
