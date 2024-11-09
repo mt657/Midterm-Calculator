@@ -1,6 +1,14 @@
 # main.py
 
+import logging
+from app.logger_config import setup_logging  # Import the logging setup function
 from app.calculator import Calculator
+
+# Set up logging configuration
+setup_logging()
+
+# Create a logger specific to this module
+logger = logging.getLogger(__name__)
 
 def center_text(text, width=50):
     """Center the text within a specified width.
@@ -21,6 +29,7 @@ def main():
     and displays results or error messages to the user.
     """
     calculator = Calculator()
+    logger.info("Calculator session started.")  # Log start of session
 
     print("\n" + "=" * 50)
     print(center_text("Welcome to the Interactive Calculator!", 50))
@@ -34,6 +43,7 @@ def main():
             print("\n" + "=" * 50)
             print(center_text("Exiting the calculator. Goodbye!", 50))
             print("=" * 50 + "\n")
+            logger.info("Calculator session ended by user.")  # Log session end
             break
 
         parts = user_input.split()
@@ -43,7 +53,7 @@ def main():
             args = list(map(float, parts[1:]))  # Convert arguments to float
             output = calculator.execute_command(command, *args)
 
-            # Determine if output is a numeric result, string message, or list (e.g., history)
+            # Display output to user
             if isinstance(output, (int, float)):  # For numeric results
                 print("\n" + "=" * 50)
                 print()  # Add spacing above the result
@@ -61,6 +71,7 @@ def main():
                 print("=" * 50 + "\n")
 
         except ValueError:
+            logger.error("Invalid input - could not parse arguments to float.")
             print("\n" + "=" * 50)
             print(center_text("Error: Invalid input.", 50))
             print(center_text("Please ensure you provide numbers as arguments.", 50))
