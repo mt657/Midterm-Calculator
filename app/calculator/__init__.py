@@ -1,11 +1,8 @@
-import logging
-from app.logger_config import setup_logging
-from app.operations.addition import Addition
-from app.operations.subtraction import Subtraction
-from app.operations.multiplication import Multiplication
-from app.operations.division import Division
+from app.operation_manager import OperationManager  # Correct import for OperationManager
 from app.history import History
 from app.calculation import Calculation
+import logging
+from app.logger_config import setup_logging
 
 # Set up logging configuration
 setup_logging()
@@ -17,10 +14,6 @@ class Calculator:
         """Initialize the Calculator with command mappings and history."""
         self.history = History()  # Initialize history attribute here
         self.commands = {
-            'add': Addition(),
-            'subtract': Subtraction(),
-            'multiply': Multiplication(),
-            'divide': Division(),
             'help': self.show_help,
             'exit': self.exit_calculator,
             'quit': self.exit_calculator,
@@ -30,7 +23,20 @@ class Calculator:
             'load': self.history.load,
             'history': self.history.get_history
         }
+        
+        # Load the operations dynamically using the OperationManager
+        self.load_operations()
+        
         logging.info("Calculator initialized with available commands and history tracking.")
+
+    def load_operations(self):
+        """Load operations dynamically using the OperationManager and add them to the commands dictionary."""
+        operation_manager = OperationManager()  # Instantiate the OperationManager
+        operations = operation_manager.load_operations()  # Call load_operations to get the operations
+
+        # Add operations to the commands dictionary
+        for operation_name, operation_class in operations.items():
+            self.commands[operation_name] = operation_class()
 
     def execute_command(self, command, *args):
         """Execute the command associated with the user input.

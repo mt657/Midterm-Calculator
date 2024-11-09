@@ -3,10 +3,7 @@ import pandas as pd
 import os
 from typing import List
 from app.calculation import Calculation
-from app.operations.addition import Addition
-from app.operations.subtraction import Subtraction
-from app.operations.multiplication import Multiplication
-from app.operations.division import Division
+import pkg_resources  # To dynamically load plugins
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -14,14 +11,6 @@ load_dotenv()
 
 # Initialize the logger for this module
 logger = logging.getLogger(__name__)
-
-# Global operation map to map operation names to the corresponding operation objects
-operation_map = {
-    "Addition": Addition(),
-    "Subtraction": Subtraction(),
-    "Multiplication": Multiplication(),
-    "Division": Division()
-}
 
 class History:
     """Class to keep track of calculation history with undo, clear, save, and load functionality."""
@@ -35,6 +24,25 @@ class History:
         if not os.path.exists(self.filename):
             pd.DataFrame(columns=["operand1", "operation", "operand2", "result"]).to_csv(self.filename, index=False)
             logger.info(f"History file {self.filename} created.")
+
+        # Dynamically load operations from entry points
+        self.operation_map = self.load_operations()
+
+    def load_operations(self):
+        """Dynamically load operations from entry points."""
+        operation_map = {}
+        try:
+            # Use pkg_resources to find operations registered in the calculator.operations entry point
+            for entry_point in pkg_resources.iter_entry_points(group="calculator.operations"):
+                operation_class = entry_point.load()
+                operation_name = entry_point.name.capitalize()  # Get the operation name from the entry point
+                operation_map[operation_name] = operation_class()  # Instantiate the operation class
+            
+            logger.info("Operations loaded dynamically.")
+        except Exception as e:
+            logger.error(f"Error loading operations: {e}")
+            raise RuntimeError("Failed to load operations dynamically.")
+        return operation_map
 
     def add_calculation(self, calculation: Calculation):
         """
@@ -121,7 +129,8 @@ class History:
                     operand2 = float(row["operand2"])
                     result = float(row["result"])
 
-                    operation = operation_map.get(operation_name, None)
+                    # Dynamically retrieve the operation class from the operation_map
+                    operation = self.operation_map.get(operation_name, None)
 
                     if operation:
                         calculation = Calculation(operation, operand1, operand2)
