@@ -9,6 +9,7 @@ Fixtures:
     history: Provides a fresh instance of the History class for each test.
 """
 # pylint: disable=redefined-outer-name
+import os
 from unittest.mock import patch, MagicMock
 import pytest
 import pandas as pd
@@ -20,11 +21,22 @@ from app.operations.addition import Addition
 sample_calculation = Calculation(Addition(), 5, 3)
 sample_calculation.set_result(8)
 
+# Path to the history file to be used in tests
+HISTORY_FILE_PATH = "history.csv"
+
+# Function to ensure the history file is clean before each test
+def clean_history_file():
+    """Remove the history file if it exists to ensure a clean slate for each test."""
+    if os.path.exists(HISTORY_FILE_PATH):
+        os.remove(HISTORY_FILE_PATH)
+
 
 @pytest.fixture
 def history_fixture():
     """Fixture to provide an instance of the History class."""
-    return History()
+    clean_history_file()  # Clean the history file before each test
+    yield History()  # Return the History instance to be used in tests
+    clean_history_file()  # Clean the history file after the test is done
 
 
 @pytest.mark.parametrize("filename, expected_error_msg", [
@@ -117,12 +129,21 @@ def test_load_exception_handling(history_fixture):
 
 def test_load_unknown_operation(history_fixture):
     """Test case for handling unknown operations during load."""
+    # Mock the pandas read_csv method to return a row with an unknown operation
     with patch("pandas.read_csv", return_value=MagicMock(empty=False,
         iterrows=MagicMock(return_value=[(0, {"operand1": 5,
             "operation": "UnknownOperation", "operand2": 3, "result": 8})]))):
-        with patch("builtins.print") as mock_print:
-            history_fixture.load()
-            mock_print.assert_called_once_with("Error: Operation UnknownOperation not recognized.")
+
+        # Catch the log output
+        with patch('app.history.logger') as mock_logger:
+            load_msg = history_fixture.load()
+
+            # Check that the log call for unknown operation is made
+            expected_error_message = "Operation UnknownOperation not recognized during load."
+            mock_logger.error.assert_called_with(expected_error_message)
+
+            # Check that the load method returns the error message for an unknown operation
+            assert load_msg == "Error: Operation UnknownOperation not recognized."
 
 
 def test_undo_no_history(history_fixture):
@@ -130,3 +151,32 @@ def test_undo_no_history(history_fixture):
     assert len(history_fixture.get_history()) == 0  # History should be empty
     undo_msg = history_fixture.undo()
     assert undo_msg == "No history to undo."  # Ensure the correct message is returned
+
+# Test case to ensure the correct handling of ValueError during history loading
+def test_load_history_invalid_data():
+    """Prepare mock data for an invalid CSV (non-numeric values)"""
+    invalid_data = {
+        "operand1": ["a", "b", "c"],  # Non-numeric values
+        "operation": ["Addition", "Subtraction", "Multiplication"],
+        "operand2": ["d", "e", "f"],  # Non-numeric values
+        "result": ["x", "y", "z"]     # Non-numeric values
+    }
+    # Convert the mock data into a DataFrame
+    df_invalid = pd.DataFrame(invalid_data)
+
+    # Mock pandas.read_csv to return the invalid DataFrame
+    with patch('pandas.read_csv', return_value=df_invalid):
+        # Create a History instance
+        history = History()
+
+        # Capture the output from the load method
+        result = history.load()
+
+        # Check if the appropriate error message is returned
+        assert result == "Error: Invalid data in history.csv."
+
+        # Additionally, we can check that logging occurred
+        with patch('app.history.logger.error') as mock_error:
+            history.load()
+            expected_error_message = "Error processing row: could not convert string to float: 'a'"
+            mock_error.assert_called_with(expected_error_message)
