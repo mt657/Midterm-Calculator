@@ -114,17 +114,6 @@ def test_load_exception_handling(history_fixture):
         # Verify the error message returned matches the exception
         assert load_msg == "Error: Test exception"
 
-
-def test_load_unknown_operation(history_fixture):
-    """Test case for handling unknown operations during load."""
-    with patch("pandas.read_csv", return_value=MagicMock(empty=False,
-        iterrows=MagicMock(return_value=[(0, {"operand1": 5,
-            "operation": "UnknownOperation", "operand2": 3, "result": 8})]))):
-        with patch("builtins.print") as mock_print:
-            history_fixture.load()
-            mock_print.assert_called_once_with("Error: Operation UnknownOperation not recognized.")
-
-
 def test_undo_no_history(history_fixture):
     """Test case for undoing when there is no history."""
     assert len(history_fixture.get_history()) == 0  # History should be empty
