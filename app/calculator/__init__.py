@@ -4,6 +4,8 @@ from app.operations.addition import Addition
 from app.operations.subtraction import Subtraction
 from app.operations.multiplication import Multiplication
 from app.operations.division import Division
+from app.operations.power import Power
+from app.operations.modulus import Modulus
 from app.history import History
 from app.calculation import Calculation
 
@@ -21,6 +23,8 @@ class Calculator:
             'subtract': Subtraction(),
             'multiply': Multiplication(),
             'divide': Division(),
+            'power': Power(),  # Add Power operation to commands
+            'modulus': Modulus(),  # Add Modulus operation to commands
             'help': self.show_help,
             'exit': self.exit_calculator,
             'quit': self.exit_calculator,
@@ -83,6 +87,8 @@ class Calculator:
             "- subtract: Subtract the second number from the first\n"
             "- multiply: Multiply two numbers\n"
             "- divide: Divide the first number by the second\n"
+            "- power: Raise the first number to the power of the second\n"
+            "- modulus: Find the remainder when the first number is divided by the second\n"
             "\n"
             "History Commands:\n"
             "- undo: Undo the last calculation\n"
