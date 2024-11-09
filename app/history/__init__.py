@@ -7,6 +7,10 @@ from app.operations.addition import Addition
 from app.operations.subtraction import Subtraction
 from app.operations.multiplication import Multiplication
 from app.operations.division import Division
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Initialize the logger for this module
 logger = logging.getLogger(__name__)
@@ -25,7 +29,7 @@ class History:
     def __init__(self):
         """Initialize an empty list to store calculation history and ensure the history file exists."""
         self._history: List[Calculation] = []
-        self.filename = "history.csv"  # Hardcode the filename
+        self.filename = os.getenv("HISTORY_FILENAME", "default.csv")  # Load filename from .env or default
         
         # Create the history file if it doesn't exist
         if not os.path.exists(self.filename):
@@ -123,7 +127,6 @@ class History:
                         calculation = Calculation(operation, operand1, operand2)
                         calculation.set_result(result)
                         self.add_calculation(calculation)
-                        logger.info(f"Loaded calculation: {calculation}")
                     else:
                         logger.error(f"Operation {operation_name} not recognized during load.")
                         return f"Error: Operation {operation_name} not recognized."

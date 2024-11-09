@@ -17,6 +17,11 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    # Define environment variables here using GitHub secrets
+    env:
+      LOG_FILE: ${{ secrets.LOG_FILE }}
+      HISTORY_FILENAME: ${{ secrets.HISTORY_FILENAME }}
+
     steps:
     - uses: actions/checkout@v3
 
